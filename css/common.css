@@ -19,3 +19,9 @@ textarea {
 .info-box + .info-box {
   margin-top: 0.2rem;
 }
+.flex-1 {
+  flex: 1;
+}
+.flex-0 {
+  flex: 0;
+}
