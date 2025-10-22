@@ -78,7 +78,7 @@
 
     <!-- 游戏列表 -->
     <div class="game-grid">
-      <div class="card game-card" onclick="location.href='demo.html'">
+      <div class="card game-card" onclick="toDemo('demo.html', './ex/index.html')">
         <div class="img-wrap">
           <img src="./imgs/games.jpg" alt="小游戏合集展示">
         </div>
@@ -120,6 +120,16 @@
       </ul>
     </div>
   </footer>
+
+  <script>
+    function toDemo(url, mobileUrl) {
+      if (navigator.userAgent.match(/mobile/i)) {
+        window.location.replace(mobileUrl);
+      } else {
+        window.location.replace(url);
+      }
+    }
+  </script>
 </body>
 
 </html>
