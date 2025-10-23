@@ -51,6 +51,11 @@
       object-fit: cover;
       object-position: top center;
     }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
   </style>
 </head>
 
@@ -77,34 +82,8 @@
     </div>
 
     <!-- 游戏列表 -->
-    <div class="game-grid">
-      <div class="card game-card" onclick="toDemo('demo.html', './ex/index.html')">
-        <div class="img-wrap">
-          <img src="./imgs/games.jpg" alt="小游戏合集展示">
-        </div>
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">小游戏合集展示</h5>
-          <p class="card-text flex-1">包含多款经典小游戏的综合演示，涵盖射击、益智、动作等。</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">多种游戏类型</small>
-            <span class="badge bg-primary">Cocos Creator 2.4.15</span>
-          </div>
-        </div>
-      </div>
-      <div class="card game-card" onclick="location.href='demo.html'">
-        <div class="img-wrap">
-          <img src="./imgs/games2.jpg" alt="奇幻塔防游戏">
-        </div>
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">奇幻塔防游戏</h5>
-          <p class="card-text flex-1">奇幻塔防游戏。</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">幻塔防游戏</small>
-            <span class="badge bg-primary">Cocos Creator 3.8.6</span>
-          </div>
-        </div>
-      </div>
+    <div class="game-grid" id="gameGrid">
+      <div class="loading">加载中...</div>
     </div>
   </div>
 
@@ -124,11 +103,59 @@
   <script>
     function toDemo(url, mobileUrl) {
       if (navigator.userAgent.match(/mobile/i)) {
-        window.location.replace(mobileUrl);
+        window.location.href = mobileUrl;
       } else {
-        window.location.replace(url);
+        window.location.href = url;
       }
     }
+
+    // 从配置文件动态加载游戏列表
+    function loadGames() {
+      const gameGrid = document.getElementById('gameGrid');
+
+      fetch('./config/games.json')
+        .then(response => response.json())
+        .then(games => {
+          // 清空加载提示
+          gameGrid.innerHTML = '';
+
+          // 根据配置生成游戏卡片
+          games.forEach(game => {
+            const gameCard = document.createElement('div');
+            gameCard.className = 'card game-card';
+
+            // 根据是否有移动端URL决定点击处理方式
+            if (game.iframeSrc) {
+              gameCard.setAttribute('onclick', `toDemo('./demo.html?game=${game.id}', '${game.iframeSrc}')`);
+            } else {
+              gameCard.setAttribute('onclick', `location.href='./${game.id}/index.html'`);
+            }
+
+            gameCard.innerHTML = `
+              <div class="img-wrap">
+                <img src="${game.pic}" alt="${game.name}">
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">${game.name}</h5>
+                <p class="card-text flex-1">${game.intro}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">${game.tag}</small>
+                  <span class="badge bg-primary">Cocos Creator ${game.version}</span>
+                </div>
+              </div>
+            `;
+
+            gameGrid.appendChild(gameCard);
+          });
+        })
+        .catch(error => {
+          console.error('加载游戏列表失败:', error);
+          gameGrid.innerHTML = '<div class="alert alert-danger">游戏列表加载失败，请检查配置文件</div>';
+        });
+    }
+
+    // 页面加载完成后加载游戏列表
+    document.addEventListener('DOMContentLoaded', loadGames);
   </script>
 </body>
 

@@ -101,82 +101,129 @@
     color: #333;
     font-weight: 600;
   }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 18px;
+    color: #666;
+  }
 </style>
 
 <body class="bg-light">
-  <div class="container-wrap">
-    <!-- 手机模拟器 -->
-    <div class="me-4 d-flex justify-content-center flex-0">
-      <div class="phone-mockup position-relative">
-        <div class="phone-notch"></div>
-        <!-- 内嵌Demo（替换为你的实际项目URL） -->
-        <iframe src="./ex/index.html" class="demo-frame" title="Mobile Demo"></iframe>
-      </div>
-    </div>
-    <!-- 控制面板 -->
-    <div class="p-4 bg-white rounded shadow-sm flex-1">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="main-title mb-0">小游戏合集展示</h3>
-        <!-- 返回主界面按钮 -->
-        <a href="./index.html" class="btn btn-outline-primary">
-          <i class="bi bi-house-door"></i> 返回主界面
-        </a>
-      </div>
-
-      <div class="d-flex">
-        <div>
-          <label class="form-label">设备尺寸预设</label>
-          <select class="form-select" id="deviceSelector" onchange="changeDevice(this.value)">
-            <option value="375x667">iPhone 8 (375×667)</option>
-            <option value="414x896">iPhone 12 (414×896)</option>
-            <option value="360x800">Pixel 5 (360×800)</option>
-            <option value="412x869">Pixel 7 (412×869)</option>
-            <option value="375x812">iPhone X (375×812)</option>
-            <option value="430x932">iPhone 14 Pro (430×932)</option>
-          </select>
-        </div>
-
-        <div class="mx-3">
-          <label class="form-label">操作</label>
-          <div class="d-grid gap-2 d-md-flex">
-            <!-- <button class="btn btn-outline-primary me-md-2" onclick="toggleOrientation()">
-              <i class="bi bi-arrow-clockwise"></i> 切换方向
-            </button> -->
-            <button class="btn btn-outline-secondary" onclick="document.querySelector('.demo-frame').src += ''">
-              <i class="bi bi-arrow-repeat"></i> 刷新页面
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-20px">
-        <label class="form-label">使用说明</label>
-        <div class="info-box">
-          <ol class="mb-0">
-            <li>点击右侧小游戏Logo开始游戏</li>
-            <li>手机模拟器仅供参考，实际效果以真机为准</li>
-            <li>可以使用上方设备预设选择不同设备尺寸进行测试</li>
-            <li>点击"刷新页面"按钮可重新加载游戏</li>
-          </ol>
-        </div>
-      </div>
-      <div class="mt-20px">
-        <label class="form-label">开发介绍</label>
-        <div class="info-box">
-          <ul class="mb-0">
-            <li>本项目基于Cocos Creator 2.4.15版本开发，采用TypeScript编写游戏逻辑</li>
-            <li>项目目标为学习和练习，所有小游戏均实现基础核心玩法</li>
-            <li>游戏屏幕方向：除打小鸟游戏为横屏外，其余游戏均为竖屏</li>
-            <li>开发教程参考来源：B站用户"Gamer飞羽"和"大家好我是阔阔"的Cocos教程系列</li>
-          </ul>
-        </div>
-      </div>
+  <div class="container-wrap" id="container">
+    <!-- 加载提示 -->
+    <div class="loading" id="loading">
+      正在加载配置信息...
     </div>
   </div>
 
   <script>
-    if (navigator.userAgent.match(/mobile/i)) {
-      window.location.replace('./ex/index.html');
+    // 获取URL参数
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(window.location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // 加载配置文件
+    async function loadConfig() {
+      try {
+        const gameId = getUrlParameter('game') || 'default';
+        const response = await fetch('./config/games.json');
+        const games = await response.json();
+        const game = games.find(g => g.id === gameId) || games[0];
+        if (navigator.userAgent.match(/mobile/i)) {
+          window.location.replace(game.iframeSrc);
+          return
+        }
+        renderPage(game);
+      } catch (error) {
+        console.error('加载配置失败:', error);
+        document.getElementById('loading').innerHTML = '加载配置失败，请检查配置文件';
+        setTimeout(() => {
+          window.location.href = './index.html';
+        }, 3000);
+      }
+    }
+
+    // 渲染页面
+    function renderPage(game) {
+      document.getElementById('container').innerHTML = `
+        <!-- 手机模拟器 -->
+        <div class="me-4 d-flex justify-content-center flex-0">
+          <div class="phone-mockup position-relative">
+            <div class="phone-notch"></div>
+            <!-- 内嵌Demo（替换为你的实际项目URL） -->
+            <iframe src="${game.iframeSrc || './ex/index.html'}" class="demo-frame" title="Mobile Demo"></iframe>
+          </div>
+        </div>
+        <!-- 控制面板 -->
+        <div class="p-4 bg-white rounded shadow-sm flex-1">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="main-title mb-0">${game.name}</h3>
+            <!-- 返回主界面按钮 -->
+            <a href="./index.html" class="btn btn-outline-primary">
+              <i class="bi bi-house-door"></i> 返回主界面
+            </a>
+          </div>
+
+          <div class="d-flex">
+            <div>
+              <label class="form-label">设备尺寸预设</label>
+              <select class="form-select" id="deviceSelector" onchange="changeDevice(this.value)">
+                <option value="375x667">iPhone 8 (375×667)</option>
+                <option value="414x896">iPhone 12 (414×896)</option>
+                <option value="360x800">Pixel 5 (360×800)</option>
+                <option value="412x869">Pixel 7 (412×869)</option>
+                <option value="375x812">iPhone X (375×812)</option>
+                <option value="430x932">iPhone 14 Pro (430×932)</option>
+              </select>
+            </div>
+
+            <div class="mx-3">
+              <label class="form-label">操作</label>
+              <div class="d-grid gap-2 d-md-flex">
+                <!-- <button class="btn btn-outline-primary me-md-2" onclick="toggleOrientation()">
+                  <i class="bi bi-arrow-clockwise"></i> 切换方向
+                </button> -->
+                <button class="btn btn-outline-secondary" onclick="document.querySelector('.demo-frame').src += ''">
+                  <i class="bi bi-arrow-repeat"></i> 刷新页面
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-20px">
+            <label class="form-label">使用说明</label>
+            <div class="info-box">
+              <ol class="mb-0">
+                ${game.instructions.map(item => `<li>${item}</li>`).join('')}
+              </ol>
+            </div>
+          </div>
+          <div class="mt-20px">
+            <label class="form-label">开发介绍</label>
+            <div class="info-box">
+              <ul class="mb-0">
+                ${game.development.map(item => `<li>${item}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 重新绑定事件
+      bindEvents();
+    }
+
+    // 绑定事件
+    function bindEvents() {
+      // 初始化设备选择器
+      document.getElementById('deviceSelector').value = '375x667';
     }
 
     let orientation = 1; // 1: 竖屏 0: 横屏
@@ -235,6 +282,9 @@
         toggleOrientation(or)
       }
     });
+
+    // 页面加载完成后加载配置
+    document.addEventListener('DOMContentLoaded', loadConfig);
   </script>
 </body>
 
