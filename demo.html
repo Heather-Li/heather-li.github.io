@@ -93,7 +93,9 @@
     width: 100%;
     height: 100%;
     border: none;
-    background: white;
+    background: #222222;
+    display: block;
+    /* 消除iframe下方可能的空白缝隙 */
   }
 
   /* 标题样式 */
@@ -141,6 +143,9 @@
           return
         }
         renderPage(game);
+        if (game.orientation === 0) {
+          toggleOrientation(0);
+        }
       } catch (error) {
         console.error('加载配置失败:', error);
         document.getElementById('loading').innerHTML = '加载配置失败，请检查配置文件';
@@ -264,15 +269,6 @@
       } else {
         phone.style.width = `${currentHeight}px`;
         phone.style.height = `${currentWidth}px`;
-      }
-
-      // 根据当前宽高确定方向
-      if (currentWidth > currentHeight) {
-        container.classList.add('landscape');
-        orientation = 0;
-      } else {
-        container.classList.remove('landscape');
-        orientation = 1;
       }
     }
 
